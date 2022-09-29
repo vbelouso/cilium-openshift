@@ -12,7 +12,7 @@
   - [Cilium deployment status](#cilium-deployment-status)
   - [Cilium connectivity test](#cilium-connectivity-test)
     - [Creating SCC](#creating-scc)
-    - [Deploing the connectivity test](#deploing-the-connectivity-test)
+    - [Deploying the connectivity test](#deploying-the-connectivity-test)
     - [Cleanup after connectivity test](#cleanup-after-connectivity-test)
 
 ## Prerequisites
@@ -194,7 +194,7 @@ groups: null
 EOF
 ```
 
-### Deploing the connectivity test
+### Deploying the connectivity test
 
 ```shell
 oc new-project cilium-test
