@@ -7,7 +7,11 @@
     - [Changing network configuration](#changing-network-configuration)
     - [Creating manifests](#creating-manifests)
     - [Preparing Cilium OLM manifests](#preparing-cilium-olm-manifests)
+      - [Version 11](#version-11)
+      - [Version 12](#version-12)
     - [Preparing CiliumConfig](#preparing-ciliumconfig)
+      - [CiliumConfig version 11](#ciliumconfig-version-11)
+      - [CiliumConfig version 12](#ciliumconfig-version-12)
     - [Cluster installation](#cluster-installation)
   - [Cilium deployment status](#cilium-deployment-status)
   - [Cilium connectivity test](#cilium-connectivity-test)
@@ -16,6 +20,8 @@
     - [Cleanup after connectivity test](#cleanup-after-connectivity-test)
 
 ## Prerequisites
+
+This guide describe the installation of Cilium `v1.11.7` and `v1.12.0`.
 
 - OpenShift installation program - v4.10.28
 
@@ -80,6 +86,8 @@ openshift-install create manifests --dir "${CLUSTER_NAME}"
 
 ### Preparing Cilium OLM manifests
 
+#### Version 11
+
 ```shell
 cilium_olm_rev="master"
 cilium_version="1.11.7"
@@ -90,9 +98,23 @@ rm -rf -- /tmp/cilium-olm.tgz "/tmp/cilium-olm-${cilium_olm_rev}"
 ls ${CLUSTER_NAME}/manifests/cluster-network-*-cilium-*
 ```
 
+#### Version 12
+
+```shell
+cilium_olm_rev="master"
+cilium_version="1.12.0"
+curl --silent --location --fail --show-error "https://github.com/cilium/cilium-olm/archive/${cilium_olm_rev}.tar.gz" --output /tmp/cilium-olm.tgz
+tar -C /tmp -xf /tmp/cilium-olm.tgz
+cp /tmp/cilium-olm-${cilium_olm_rev}/manifests/cilium.v${cilium_version}/* "${CLUSTER_NAME}/manifests"
+rm -rf -- /tmp/cilium-olm.tgz "/tmp/cilium-olm-${cilium_olm_rev}"
+ls ${CLUSTER_NAME}/manifests/cluster-network-*-cilium-*
+```
+
 ### Preparing CiliumConfig
 
 Replace default `CiliumConfig` with following YAML definition file
+
+#### CiliumConfig version 11
 
 ```shell
 cat <<EOF > ${CLUSTER_NAME}/manifests/cluster-network-07-cilium-ciliumconfig.yaml
@@ -122,7 +144,34 @@ spec:
     relay: {enabled: true}
     ui: {enabled: true}
 EOF
+```
 
+#### CiliumConfig version 12
+
+```shell
+cat <<EOF > ${CLUSTER_NAME}/manifests/cluster-network-07-cilium-ciliumconfig.yaml
+apiVersion: cilium.io/v1alpha1
+kind: CiliumConfig
+metadata:
+  name: cilium
+  namespace: cilium
+spec:
+  ipam:
+    mode: "cluster-pool"
+    operator:
+      clusterPoolIPv4PodCIDR: "10.128.0.0/14"
+      clusterPoolIPv4MaskSize: "23"
+  tunnelPort: 4789
+  cni:
+    binPath: "/var/lib/cni/bin"
+    confPath: "/var/run/multus/cni/net.d"
+  prometheus:
+    serviceMonitor: {enabled: false}
+  hubble:
+    tls: {enabled: false}
+    relay: {enabled: true}
+    ui: {enabled: true}
+EOF
 ```
 
 ### Cluster installation
